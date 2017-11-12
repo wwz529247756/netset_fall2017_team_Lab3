@@ -9,13 +9,20 @@ from playground.network.common import StackingProtocol
 from playground.network.common import StackingProtocolFactory
 from playground.network.common import StackingTransport
 import playground
-from PLSServer import *
+import HandShakePacket
+from TranSerProto import *
+from ServerPassThrough import *
+from ServerAppProtocol import *
 from asyncio import *
+from PLSServer import *
 
 
 if __name__=='__main__':
     loop = get_event_loop()
-    coro = playground.getConnector().create_playground_server(lambda:PLSServer(),8000)
+    f = StackingProtocolFactory(lambda: PLSServer(), lambda: TranSerProto())
+    ptConnector = playground.Connector(protocolStack=f)
+    playground.setConnector('ServerStack', ptConnector)
+    coro = playground.getConnector('ServerStack').create_playground_server(lambda:ServerAppProtocol(),8998)
     myserver= loop.run_until_complete(coro)
     loop.run_forever()
     myserver.close()

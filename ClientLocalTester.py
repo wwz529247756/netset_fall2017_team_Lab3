@@ -9,13 +9,21 @@ from playground.network.common import StackingProtocol
 from playground.network.common import StackingProtocolFactory
 from playground.network.common import StackingTransport
 import playground
-from PLSClient import *
+from HandShakePacket import *
+from ClientPassThrough import *
+from ClientAppProtocol import *
 from asyncio import *
+from TranCliProto import TranCliProto
+from PLSClient import *
 
 if __name__=='__main__':
     loop = get_event_loop()
-    connect = playground.getConnector().create_playground_connection (lambda:PLSClient(), '20174.1.1.1', 8000)
-    transport, myclient = loop.run_until_complete(connect)
-    #myclient.Login("wwz","hellowwz")
+    f = StackingProtocolFactory(lambda: PLSClient(), lambda: TranCliProto())
+    ptConnector = playground.Connector(protocolStack=f)
+    playground.setConnector('ClientStack', ptConnector)
+    connect = playground.getConnector('ClientStack').create_playground_connection (lambda:ClientAppProtocol(), '20174.1.1.1', 8998)
+    mytransport, myclientprotocol = loop.run_until_complete(connect)
+    #myclientprotocol.connection_made(mytransport)
+    #myclientprotocol.SentRequest();
     loop.run_forever()
     loop.close()
