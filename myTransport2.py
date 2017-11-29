@@ -4,7 +4,7 @@ Created on 2017年11月8日
 @author: wangweizhou
 '''
 from playground.network.common import StackingTransport
-from PLSPackets import *
+from .PLSPackets import *
 
 class PlsTransport(StackingTransport):
     def __init__(self, lowerTransport, protocol):

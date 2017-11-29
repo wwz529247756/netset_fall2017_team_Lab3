@@ -1,0 +1,672 @@
+
+
+
+Network Working Group                                       W. Wang, Ed.
+Request for Comments: 1                   JHU Network Security Fall 2017
+Category: Standards Track                                  November 2017
+
+
+                    Playground Request For Comments
+
+Abstract
+
+   The network protocol is used for a variety of purposes on the
+   network.  It gives a set of rules and specifies the interaction for
+   the network communication.  A secure communication and interaction is
+   necessary for all network protocols.  Transport Layer Security(TLS),
+   and its predecessor, Secure Sockets Layer(SSL) are cryptographic
+   protocols that provide secure data transmission and communications in
+   the network.
+
+   In order to provide privacy and data integrity between two end-users,
+   a Playground Layer Security(PLS) protocol is designed within
+   specifications.  The PLAYGROUND, which stands for Poly-Localized
+   Algorithmic Yields Generated Remotely On Unused Network Devices, is a
+   virtual flat form designed for researchers to develop network
+   security experiments.  The PRFC document (Playground Request For
+   Comments) which is similar to RFC, specifies a format standard and
+   explains the designed protocol that contains both technical
+   mechanisms and concepts in the program.
+
+Status of this Memo
+
+   This document specifies a Playgrounds standards track protocol for
+   the Playground Experiment, and requests discussion and suggestions
+   for improvements.  Distribution of this memo is unlimited.
+
+Copyright Notice
+
+   Copyright (c) 2017 SETH JAMES NIELSON.  All rights reserved.
+
+   This document is used solely for educational purposes.  Any citations
+   within this document are also for educational purposes and also for
+   technical reference.  If any of these cited elements are protected
+   under copyright, their inclusion here falls under Fair Use
+   provisions.
+
+
+
+
+
+
+
+
+
+Wang                         Standards Track                    [Page 1]
+
+RFC 1                            PRFC's                    November 2017
+
+
+Table of Contents
+
+   1.  Introduction . . . . . . . . . . . . . . . . . . . . . . . . .  3
+     1.1.  Purpose/Technical Background . . . . . . . . . . . . . . .  3
+     1.2.  Requirements Language  . . . . . . . . . . . . . . . . . .  3
+   2.  Session  . . . . . . . . . . . . . . . . . . . . . . . . . . .  3
+     2.1.  Session Establishment  . . . . . . . . . . . . . . . . . .  3
+     2.2.  Session Establishment  . . . . . . . . . . . . . . . . . .  4
+     2.3.  Certificate Chain Verification . . . . . . . . . . . . . .  5
+   3.  Data Transmission  . . . . . . . . . . . . . . . . . . . . . .  5
+   4.  Error Handling . . . . . . . . . . . . . . . . . . . . . . . .  6
+     4.1.  Error Handing in Handshake . . . . . . . . . . . . . . . .  6
+     4.2.  Error Handling in Data Transmission  . . . . . . . . . . .  7
+     4.3.  Error Handing in Certificate Chain Verification  . . . . .  7
+   5.  Packets Description  . . . . . . . . . . . . . . . . . . . . .  7
+   6.  State Machine  . . . . . . . . . . . . . . . . . . . . . . . .  8
+   7.  Summary  . . . . . . . . . . . . . . . . . . . . . . . . . . .  9
+   8.  Normative References . . . . . . . . . . . . . . . . . . . . . 10
+   Author's Address . . . . . . . . . . . . . . . . . . . . . . . . . 10
+   Intellectual Property and Copyright Statements . . . . . . . . . . 11
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Wang                         Standards Track                    [Page 2]
+
+RFC 1                            PRFC's                    November 2017
+
+
+1.  Introduction
+
+1.1.  Purpose/Technical Background
+
+   The purpose of the design of Playground Layer Security(PLS) is to
+   provide communication security over the computer network.  The PLS is
+   implemented beyond the transport layer to provide privacy and data
+   integrity for network communication between a client and a server.  A
+   symmetric cryptography in PLS to encrypt the data transmitted.  The
+   keys for symmetric cryptography encryption are from PLS handshake
+   process based on secret sharing.  Algorithms RSA, SHA, as wells as
+   key exchanging and hash functions are used in the handshake process
+   to generate the encryption keys.  The identity of the client and the
+   server can be authenticated by using public-key cryptography.  A
+   message authentication code (MAC) is used to ensure the integrity of
+   the data transmission to prevent data alternation and data loss.
+   More methods such as error handling and function termination are used
+   to close the connection between the client and the server in case of
+   unexpected errors, data loss or data alternations.
+
+1.2.  Requirements Language
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+   document are to be interpreted as described in RFC 2119 [RFC2119] .
+
+
+2.  Session
+
+   In terms of session, it contains two parts: session establishment and
+   session termination.  Session establishment refers to PLS handshake
+   process that server and client will exchange packets six times.
+   Session termination refers to sending a special packet to inform the
+   client for stopping sending packets.
+
+2.1.  Session Establishment
+
+   There should be three types of packets involved in handshaking
+   process including: PlsHello packet, PlsKeyExchange packet, and
+   PlsHandshakeDone packet.  Six steps of packets exchanging in total,
+   and the handshaking process will be explained and decomposed into six
+   phases.
+
+   Phase 1: The client sends a PlsHello packet to the server.  The
+   packet contains two fields: nonce of client and a list of
+   certificates.  Nonce is a random integer generated in the client, and
+   the list of certificates, as the name implicate, it is a list data
+   structure stored bunch of certificates for authentication chain.
+
+
+
+Wang                         Standards Track                    [Page 3]
+
+RFC 1                            PRFC's                    November 2017
+
+
+   Besides the first certificate in the list must be client's, and the
+   following certificates will be used in the authentication.
+
+   Phase 2: The server sends a PlsHello packet to the client.  PlsHello
+   packets of server is similar with client's that server will also
+   generate a random number in the PlsHello packet as nonce, and the
+   list of certificate will send to the client.  Same as client, the
+   first certificate in the list belongs to server.
+
+   Phase 3: When the client receives a PlsHello packet from the server,
+   a PlsKeyExchange packet is sent from client to the server.  In the
+   PlsKeyExchange packet, there are two fields: one is PreKey, a buffer
+   data encrypted with server's public key extracted from the
+   certificate; the other is server's nonce plus by one.
+
+   Phase 4: After the server receives a PlsKeyExchange packet from the
+   server, a PlsKeyExchange packet will be sent from server to the
+   client.  In the PlsKeyExchange packet, there are two fields: one is
+   PreKey, a buffer data encrypted with client's public key extracted
+   from the certificate; the other is client's nonce plus by one.
+
+   Phase 5: The client sends server a PlsHandshakeDone packet, once it
+   has packets from phase 1 and phase 4.  It contains the hash of the
+   packets from Phase 1 to Phase 4.
+
+   Phase 6: The server sends client a PlsHandshakeDone packet, once it
+   has packets from phase 1 and phase 4.  It contains the hash of the
+   packets from Phase 1 to Phase 4.  It contains the hash of the packets
+   from Phase 1 to Phase 4.
+
+   Explanation: Phase 1 and 2 can start at the same time, which means
+   server and client are able to start a synchronized handshake request.
+   Phase 3 and 4 can be separately triggered.  Once the server or client
+   receives PlsHello packet, it will send a PlsKeyExchange packet to the
+   other side, and the first side of sending PlsKeyExchange packet can
+   be vary case by case.  Phase 5 and 6 can be triggered only if server
+   or client have already had packets from phase 1 to phase 4.
+
+2.2.  Session Establishment
+
+   There are two conditions which will cause the session to be
+   terminated.  The first is that the server or client's application
+   layer believe they have sent all the message and call for the
+   termination of the under layer.  The second is that some errors occur
+   during the handshaking process or data transmission in the PLS.  Each
+   of the condition will trigger the server or client send a PlsClose
+   packet which contains an error message.  Once the PlsClose packet is
+   received, the server or client will call the transport layer's close
+
+
+
+Wang                         Standards Track                    [Page 4]
+
+RFC 1                            PRFC's                    November 2017
+
+
+   function for closing the transmission between server and client.
+
+2.3.  Certificate Chain Verification
+
+   Verifying a certificate chain is the process of ensuring that a
+   specific certificate chain is well-formed, valid, correctly signed,
+   and trustworthy.  The following procedure forms and verifies a
+   certificate chain, beginning with the certificate that is presented
+   for authentication:
+
+   1.  The issuer's certificate is located.  The source can be the
+   verifier's local certificate database on that client or server, or
+   the certificate chain that is provided by the subject.
+
+   2.  The certificate signature is verified using the public key in the
+   issuer's certificate.
+
+   3.  If the issuer's certificate is trusted by the verifier,
+   verification is successful and stops here.
+
+   Otherwise, the issuer's certificate is checked to ensure that it
+   contains the appropriate subordinate certificate authority (CA) and
+   verification of the certificate chain begins again with step 1 with
+   the new certificate.
+
+
+3.  Data Transmission
+
+   After the handshake is completed, the data transmission starts.  The
+   client and the server need to use the information they have obtained
+   from the handshake.  That information includes Nc, Ns, PKc, PKs.
+   They use Nc, Ns, PKc, PKs to calculate six values- EKc, EKs, IVc,
+   IVs, MKc and MKs- which will be used in the future data transmission.
+   The calculating process is as follows.
+
+   By connecting the "PLS1.0", Nc, Ns, PKc and PKs together, they get a
+   new string.  They need to calculate 5 values which are block0,
+   block1, block2, block3, block4.  The block0 equals to the hash value
+   of the string.  The block1 equals to the hash value of the block0.
+   The block2 equals to the hash value of the block1.  The block3 equals
+   to the hash value of the block2.  The block4 equals to the hash value
+   of the block3.  Each block is 160 bits.  The sum of five blocks are
+   800 bits.  These 800 bits can be cut up to create the 768 bits of
+   keys and IV.  The first 128 bits is encryption key EKc.  The second
+   128 bits is EKs.  The third 128 bits is Client encryption IV IVc.
+   The forth 128 bits is Server encryption IV IVs.  The fifth 128 bits
+   is client MAC key MKc.  The sixth 128 bits is server MAC key MKs.
+   Now both the client and the server have the same EKc, EKs, IVc, IVs,
+
+
+
+Wang                         Standards Track                    [Page 5]
+
+RFC 1                            PRFC's                    November 2017
+
+
+   MKc, MKs.
+
+   At the beginning of data transmission, the client and the server need
+   to create encryption engine, decryption engine, HMAC-SHA1 MAC engine
+   and verification engine.  The client uses EKc as the key and IVc as
+   the initial counter value to configure the encryption engine.  And
+   for the decryption engine, the client uses EKs as the key and IVs as
+   the initial counter value to configure it.  For the MAC engine, the
+   client configures it with the key MKc.  For the verification engine,
+   the client configures it with key MKs.  The server reserved the keys
+   and IVs between engines.
+
+   To send data, the plain text P should be as the input to encryption
+   engine to obtain the cipher text C. The cipher text C will be the
+   input of the MAC engine to gain the verification code V. The cipher
+   text C and the verification code V will be put into the PLS packet.
+   And then this packet will be sent out.
+
+   When data is received, the cipher text is passed to the verification
+   engine to produce a verification code V' to see if the V equals to
+   V'.  If V equals to V', the cipher text C is passed to the decryption
+   engine to generate the plain text P'.  This P' will be transmit to
+   the higher layer.
+
+   If the V does not equal to the V', packets will be discarded until
+   the number of the wrong consecutive verifications exceed a threshold.
+   Once the number is greater than the threshold, either the client or
+   the server in this condition must send a PlsClose packet with the
+   error message.
+
+   If the transmission is completed, which means it is a normal shut
+   down, the client or the server must send a PlsClose Packet without
+   any error message.  In the transmission, either side can close
+   transmission by sending the PlsClose packet.
+
+
+4.  Error Handling
+
+   Error handling refers to the anticipation, detection, and resolution
+   of Playground Layer Security Protocol errors.  Usually, calling error
+   handlers when coming across error messages or exceptions.  In the
+   transmission process, there exist errors to be fixed.
+
+4.1.  Error Handing in Handshake
+
+   As is detailed before, there are totally 6 procedures to perform
+   during Playground Layer Security Protocol handshake.  Thus, it is
+   going to generate six messages that are M1, M2, M3, M4, M5 and M6.
+
+
+
+Wang                         Standards Track                    [Page 6]
+
+RFC 1                            PRFC's                    November 2017
+
+
+   Specifically, M5 and M6 are two authentication messages to check that
+   the PlsKeyExchange process is integrated and authorized.  It is named
+   PlsHandshakeDone procedure that both the server and the client are
+   needed to perform.  In PlsHandshakeDone instance, the SHA1 hash value
+   of the splice of "M1, M2, M3, M4" is calculated separately on both
+   the server side and the client side.  Normally, the two hash values
+   should be identical.  If not, it is going to trigger the error
+   handling module.  By calling PlsClose packet, the protocol should be
+   terminated immediately.
+
+4.2.  Error Handling in Data Transmission
+
+   In the data transmission, the verification code V' which is
+   calculated by the cipher text C may not match the verification code
+   contained in the packet.  In this circumstance, the client or the
+   server will ignore this packet until the number of times of the
+   consecutive wrong verifications exceeding the threshold.  The
+   threshold is the maximum value of the failed verification tolerance.
+   When the number exceeds the threshold, the client or the server must
+   send a PlsClose packet with the error message to terminate the
+   session.
+
+   It verifier cannot be found in the list, the program will call the
+   close function terminating the illegal request.  If the chain is not
+   integrated, or the issuer fails to verify the certificate, the close
+   function will be called.
+
+4.3.  Error Handing in Certificate Chain Verification
+
+   It verifier cannot be found in the list, the program will call the
+   close function terminating the illegal request.  If the chain is not
+   integrated, or the issuer fails to verify the certificate, the close
+   function will be called.
+
+
+5.  Packets Description
+
+   In Playground Layer Security Protocol, there are totally 5 message
+   packets definitions.  The first packet is PlsHello Packet.  PlsHello
+   packet is initiated to process handshake process between client and
+   server.  In this packet field, there are 2 variables.  "Nonce" is
+   defined as a one-time number that is generated randomly.  It is of
+   UINT64 type and with the length of 64 bits.  Besides, "Certs" is
+   declared as a digital certificate to prove the ownership of a public
+   key.  It is of Python List type.
+
+   The second packet is PlsKeyExchange.  This packet is a key exchange
+   message sent between the server and the client to exchange encrypted
+
+
+
+Wang                         Standards Track                    [Page 7]
+
+RFC 1                            PRFC's                    November 2017
+
+
+   public key and nonce.  A BUFFER-typed "Preke" is proclaimed to store
+   the data that will be used between the client and the server to
+   exchange encrypted public key and nonce.  "NoncePlusOne" is a UINT64-
+   typed variable to make a comparison with the nonce analyzed from
+   "Prekey".
+
+   The third packet is PlsHandshakeDone.  This packet is served as a
+   validation packet to make sure the data transported between the
+   server and the client is all correct.  It only contains a
+   "ValidationHash" variable that is used to validate the SHA1 hash
+   value of the messages transported between the server and the client.
+
+   The fourth packet is PlsData.  This is packet stores the data
+   including ciphertext message and verification code.  When the
+   plaintext message is prepared to be sent, it will be encrypted by the
+   encryption engine to produce a ciphertext C. The ciphertext is then
+   passed to the MAC engine to produce verification code V. C is stored
+   in "ciphertext" variable.  V is stored in "MAC" variable.  These data
+   are sent in a PLS Data message (C, V).
+
+   The fifth packet is PlsClose.  This packet is instantiated when the
+   server or the client wants to close the session.  Its FIELD contains
+   a string "Error" variable.  It is considered to be a normal shutdown
+   when containing no error message.  If either side receives an error
+   message, they must shut down the session immediately.
+
+
+6.  State Machine
+
+   The goal of state machine is to control the transport-layer protocol
+   status.  In the transport layer, the protocol has to accomplish hand-
+   shaking for connection, hand-waving for termination, and data-
+   transfer process.  The protocol should be designed with separated
+   status which can only be trigged by specific action for preventing
+   potential attacks.  Furthermore, because the packets processed by
+   client and server are different while establishing a connection and
+   clearing a connection, the design of status machine between server
+   and client have to be different.  Both of the client and server have
+   5 phases in status for controlling the basic transporting process.
+
+
+
+
+
+
+
+
+
+
+
+
+Wang                         Standards Track                    [Page 8]
+
+RFC 1                            PRFC's                    November 2017
+
+
+               Client                                      Server
+              +------+                                    +------+
+          --->|phase1|---------PlsHello(Nc,C_certs)------>|phase1|<---
+         |    +------+                                    +------+    |
+         |       |                                            |       |
+         |    +------+                                    +------+    |
+         | <--|phase2|<--------PlsHello(Ns,S_certs)-------|phase2|--> |
+         |    +------+                                    +------+    |
+         |       |                                            |       |
+         |    +------+                                    +------+    |
+         P <--|Phase3| --PlsKeyExchange({PKc}S_pub,Ns+1)->|phase3|--> P
+         l    +------+                                    +------+    l
+         s       |                                            |       s
+         (    +------+                                    +------+    (
+         C <--|phase4|<--PlsKeyExchange({PKs}C_pub,Nc+1)--|phase4|--> C
+         l    +------+                                    +------+    l
+         o       |                                            |       o
+         s    +------+                                    +------+    s
+         e <--|phase5| --------PlsHandshakeDone(SHA1)---->|phase5|--> e
+         )    +------+                                    +------+    )
+         E       |                                            |       E
+         r    +------+                                    +------+    r
+         r <--|phase6|<--------PlsHandshakeDone(SHA1)-----|phase6|--> r
+         o    +------+                                    +------+    o
+         r       |--------------Session Established-----------|       r
+         |    +------+                                    +------+    |
+         | <--|phase7|<--------------PlsData(C,V)-------->|phase7|--> |
+         |    +------+                                    +------+    |
+         |       |                                            |       |
+         |    +------+                                    +------+    |
+          ----|phase8|<--------------PlsClose----------->-|phase8|----
+              +---+--+                                    +------+
+                  |                                           |
+                  |-------------Session Terminated------------|
+                  |                                           |
+
+
+
+7.  Summary
+
+   In the PRFC (Playground Request For Comments) document, we described
+   the background and purpose for us to design the PLS (Playground Layer
+   Security).  In the session part, we represented the session
+   establishment, including six phases for handshake, and how session
+   terminate in two conditions.  After session have established, it
+   comes to data transmission.  In this part, we represented how data
+   will be encrypted and decrypted during the transmission.  And we
+   described the countermeasure that we implemented in PLS to handle the
+
+
+
+Wang                         Standards Track                    [Page 9]
+
+RFC 1                            PRFC's                    November 2017
+
+
+   error in both handshake establishment and data transmission.  In
+   addition, we described all the five packets we defined in the PLS
+   about data structure used in these packets.  Finally, we represented
+   the state machine which showed the state transition in this layer.
+
+
+8.  Normative References
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119, DOI 10.17487/
+              RFC2119, March 1997,
+              <https://www.rfc-editor.org/info/rfc2119>.
+
+   [RFC2360]  Scott, G., "Guide for Internet Standards Writers", BCP 22,
+              RFC 2360, DOI 10.17487/RFC2360, June 1998,
+              <https://www.rfc-editor.org/info/rfc2360>.
+
+
+Author's Address
+
+   Weizhou (editor)
+   JHU Network Security Fall 2017
+   JHU 160 Malone Hall/3400 North Charles St.
+   Baltimore, MD  21218
+   USA
+
+   Phone: +1 410-369-6429
+   Email: qqiu3@jhu.edu
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Wang                         Standards Track                   [Page 10]
+
+RFC 1                            PRFC's                    November 2017
+
+
+Full Copyright Statement
+
+   Copyright (C) Seth James Nielson (2017).  All Rights Reserved.
+
+   This document and translations of it may be copied and furnished to
+   others, and derivative works that comment on or otherwise explain it
+   or assist in its implementation may be prepared, copied, published
+   and distributed, in whole or in part, without restriction of any
+   kind, provided that the above copyright notice and this paragraph are
+   included on all such copies and derivative works.  However, this
+   document itself may not be modified in any way, such as by removing
+   the copyright notice or references to the PLAYGROUND experiment or
+   other associated organizations, except by explicit permission.
+
+   The limited permissions granted above are perpetual and will not be
+   revoked by SETH JAMES NIELSON or his successors or assigns.
+
+   This document and the information contained herein is provided on an
+   "AS IS" basis and SETH JAMES NIELSON and associated academic
+   institutions DISCLAIM ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING
+   BUT NOT LIMITED TO ANY WARRANTY THAT THE USE OF THE INFORMATION
+   HEREIN WILL NOT INFRINGE ANY RIGHTS OR ANY IMPLIED WARRANTIES OF
+   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+
+
+Intellectual Property
+
+   The PLAYGROUND framework and student submissions for PLAYGROUND are
+   intended to be free of any intellectual property conflicts.  All
+   submitting parties, especially students, are not allowed to submit
+   source code, specifications, or other components that are known to be
+   protected by copyright, patents, or other IP mechanisms.  Students
+   submitting creative content grant shared rights and ownership of
+   their content to the PLAYGROUND project.  Specifically, any
+   submission can be used in future educational settings including
+   subsequent PLAYGROUND experiments.
+
+   Any interested party is invited to bring to the experiment director's
+   attention any copyrights, patents or patent applications, or other
+   proprietary rights which may cover technology that may be currently
+   in use without permission.
+
+   It should be noted that these statements have not been reviewed by
+   legal counsel.  Moreover, the academic institutions at which
+   PLAYGROUND experiments take place may have additional or even
+   conflicting copyright and intellectual property rules.  Accordingly,
+   concerned parties may need to contact their own lawyer and/or
+   resources at their institution to understand the rights and
+
+
+
+Wang                         Standards Track                   [Page 11]
+
+RFC 1                            PRFC's                    November 2017
+
+
+   limitations associated with code donated to a PLAYGROUND experiment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Wang                         Standards Track                   [Page 12]
+

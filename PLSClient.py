@@ -9,19 +9,20 @@ from playground.network.common import StackingProtocol
 from playground.network.common import StackingProtocolFactory
 from playground.network.common import StackingTransport
 import playground
-from CertFactory import *
+from .CertFactory import *
 from asyncio import *
-from PLSPackets import *
+from .PLSPackets import *
 import hashlib
 import random
 from Crypto.Signature import PKCS1_v1_5
 from Crypto.PublicKey import RSA
-from myTransport2 import *
+from .myTransport2 import *
 from Crypto.Util import Counter
 from Crypto.Cipher import AES
 import codecs 
 from Crypto.Hash import HMAC, SHA
 import OpenSSL
+from playground.common.CipherUtil import RSA_SIGNATURE_MAC
 
 
 
@@ -31,6 +32,7 @@ class PLSClient(StackingProtocol):
         super().__init__
         self.privatekeyaddr = "/Users/wangweizhou/Desktop/public&private_key/Client/key.pem"
         self.certificateaddr = "/Users/wangweizhou/Desktop/public&private_key/Client/certificate.pem"
+        self.rootaddr = "/Users/wangweizhou/Desktop/public&private_key/root/root.crt"
         self.transport = None
         self.ClientNonce = random.randint(10000,99999)
         self.ServerNonce = None
@@ -38,8 +40,10 @@ class PLSClient(StackingProtocol):
         self.privateKeystring = getPrivateKeyForAddr(self.privatekeyaddr)
         self.privateKey = RSA.importKey(self.privateKeystring)
         self.certificate = getCertificateForAddr(self.certificateaddr)
+        self.rootcert = getRootCert(self.rootaddr)
         self.ClientCert=LIST(BUFFER)
         self.ClientCert.append(self.certificate.encode())
+        self.ClientCert.append(self.rootcert.encode())
         self.ServerCert=LIST(BUFFER)
         self.PacketsList = []
         
@@ -104,12 +108,24 @@ class PLSClient(StackingProtocol):
                     self.CalHash()
                     self.higherProtocol().connection_made(self.higherTransport)
                     self.status =1
+                    
+                if isinstance(pkt, PlsClose):
+                    self.connection_lost("Error raised!")
+                
             if self.status ==1:
                 if isinstance(pkt, PlsData):
                     if pkt.Mac == self.VerificationEngine(pkt.Ciphertext):
                         higherData = self.decryptEngine(pkt.Ciphertext)
                         self.higherProtocol().data_received(higherData)
             
+    def ChainVerifyer(self, certs):
+        for i in range(len(certs)-1):
+            this = certs[i]
+            issuer = RSA_SIGNATURE_MAC(certs[i+1].public_key())
+            if not issuer.verify(this.tbs_certificate_bytes, this.signature):
+                return False
+        return True
+    
     def VerificationEngine(self, ciphertext):
         hm = HMAC.new(self.MKs, digestmod=SHA)
         hm.update(ciphertext)

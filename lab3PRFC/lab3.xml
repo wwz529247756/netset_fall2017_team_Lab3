@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This template is modified by Seth Nielson for creating P-RFC's
+    (Playground-RFC's). -->
+<!-- This template is for creating an Internet Draft using xml2rfc,
+    which is available here: http://xml2rfc.ietf.org. -->
+<!DOCTYPE rfc SYSTEM "rfc2629.dtd" [
+  <!-- One method to get references from the online citation libraries.
+    There has to be one entity for each item to be referenced. 
+    An alternate method (rfc include) is described in the references. -->
+  <!ENTITY RFC2119 SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.2119.xml">
+  <!ENTITY RFC2360 SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.2360.xml">
+  <!ENTITY RFC2629 SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.2629.xml">
+  <!ENTITY RFC3552 SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.3552.xml">
+  <!ENTITY RFC5226 SYSTEM "http://xml2rfc.tools.ietf.org/public/rfc/bibxml/reference.RFC.5226.xml">
+]>
+<?xml-stylesheet type='text/xsl' href='rfc2629.xslt' ?>
+<!-- used by XSLT processors -->
+<!-- For a complete list and description of processing instructions (PIs), 
+    please see http://xml2rfc.ietf.org/authoring/README.html. -->
+<!-- Below are generally applicable Processing Instructions (PIs) that most I-Ds might want to use.
+    (Here they are set differently than their defaults in xml2rfc v1.32) -->
+<?rfc strict="yes" ?>
+<!-- give errors regarding ID-nits and DTD validation -->
+<!-- control the table of contents (ToC) -->
+<?rfc toc="yes"?>
+<!-- generate a ToC -->
+<?rfc tocdepth="4"?>
+<!-- the number of levels of subsections in ToC. default: 3 -->
+<!-- control references -->
+<?rfc symrefs="yes"?>
+<!-- use symbolic references tags, i.e, [RFC2119] instead of [1] -->
+<?rfc sortrefs="yes" ?>
+<!-- sort the reference entries alphabetically -->
+<!-- control vertical white space 
+    (using these PIs as follows is recommended by the RFC Editor) -->
+<?rfc compact="yes" ?>
+<!-- do not start each main section on a new page -->
+<?rfc subcompact="no" ?>
+<!-- keep one blank line between list items -->
+<!-- end of list of popular I-D processing instructions -->
+<rfc category="std" docName="rfc1" ipr="playgroundStd_v1_0" number="1">
+   <!-- category values: std, bcp, info, exp, and historic
+    ipr values: trust200902, noModificationTrust200902, noDerivativesTrust200902,
+       or pre5378Trust200902, playgroundWinter201501
+    you can add the attributes updates="NNNN" and obsoletes="NNNN" 
+    they will automatically be output with "(if approved)" -->
+   <!-- ***** FRONT MATTER ***** -->
+   <front>
+      <!-- The abbreviated title is used in the page header - it is only necessary if the 
+        full title is longer than 39 characters -->
+      <title abbrev="PRFC's">Playground Request For Comments</title>
+      <!-- add 'role="editor"' below for the editors if appropriate -->
+      <!-- Another author who claims to be an editor -->
+      <author fullname="Weizhou" initials="W.W." role="editor" surname="Wang">
+         <organization>JHU Network Security Fall 2017</organization>
+         <address>
+            <postal>
+               <street>JHU 160 Malone Hall/3400 North Charles St.</street>
+               <!-- Reorder these if your country does things differently -->
+               <city>Baltimore</city>
+               <region>MD</region>
+               <code>21218</code>
+               <country>USA</country>
+            </postal>
+            <phone>+1 410-369-6429</phone>
+            <email>qqiu3@jhu.edu</email>
+            <!-- uri and facsimile elements may also be added -->
+         </address>
+      </author>
+      <date year="2017" />
+      <!-- If the month and year are both specified and are the current ones, xml2rfc will fill 
+        in the current day for you. If only the current year is specified, xml2rfc will fill 
+   in the current day and month for you. If the year is not the current one, it is 
+   necessary to specify at least a month (xml2rfc assumes day="1" if not specified for the 
+   purpose of calculating the expiry date).  With drafts it is normally sufficient to 
+   specify just the year. -->
+      <!-- Meta-data Declarations -->
+      <area>General</area>
+      <workgroup>Playground Experiment Director</workgroup>
+      <!-- WG name at the upperleft corner of the doc,
+        IETF is fine for individual submissions.  
+   If this element is not present, the default is "Network Working Group",
+        which is used by the RFC Editor as a nod to the history of the IETF. -->
+      <keyword>PRFC</keyword>
+      <!-- Keywords will be incorporated into HTML output
+        files in a meta tag but they have no effect on text or nroff
+        output. If you submit your draft to the RFC Editor, the
+        keywords will be used for the search engine. -->
+      <abstract>
+         <t>The network protocol is used for a variety of purposes on the network. It gives a set of rules and specifies the interaction for the network communication. A secure communication and interaction is necessary for all network protocols. Transport Layer Security(TLS), and its predecessor, Secure Sockets Layer(SSL) are cryptographic protocols that provide secure data transmission and communications in the network.</t>
+         <t>In order to provide privacy and data integrity between two end-users, a Playground Layer Security(PLS) protocol is designed within specifications. The PLAYGROUND, which stands for Poly-Localized Algorithmic Yields Generated Remotely On Unused Network Devices, is a virtual flat form designed for researchers to develop network security experiments. The PRFC document (Playground Request For Comments) which is similar to RFC, specifies a format standard and explains the designed protocol that contains both technical mechanisms and concepts in the program.</t>
+      </abstract>
+   </front>
+   <middle>
+      <section title="Introduction">
+         <section title="Purpose/Technical Background">
+            <t>The purpose of the design of Playground Layer Security(PLS) is to provide communication security over the computer network. The PLS is implemented beyond the transport layer to provide privacy and data integrity for network communication between a client and a server. A symmetric cryptography in PLS to encrypt the data transmitted. The keys for symmetric cryptography encryption are from PLS handshake process based on secret sharing. Algorithms RSA, SHA, as wells as key exchanging and hash functions are used in the handshake process to generate the encryption keys. The identity of the client and the server can be authenticated by using public-key cryptography. A message authentication code (MAC) is used to ensure the integrity of the data transmission to prevent data alternation and data loss. More methods such as error handling and function termination are used to close the connection between the client and the server in case of unexpected errors, data loss or data alternations.</t>
+         </section>
+         <section title="Requirements Language">
+            <t>
+               The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+       "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this
+       document are to be interpreted as described in
+               <xref target="RFC2119">RFC 2119</xref>
+               .
+            </t>
+         </section>
+      </section>
+      <section title="Session">
+         <t>In terms of session, it contains two parts: session establishment and session termination. Session establishment refers to PLS handshake process that server and client will exchange packets six times. Session termination refers to sending a special packet to inform the client for stopping sending packets.</t>
+         <section title="Session Establishment">
+            <t>There should be three types of packets involved in handshaking process including: PlsHello packet, PlsKeyExchange packet, and PlsHandshakeDone packet. Six steps of packets exchanging in total, and the handshaking process will be explained and decomposed into six phases.</t>
+            <t>Phase 1: The client sends a PlsHello packet to the server. The packet contains two fields: nonce of client and a list of certificates. Nonce is a random integer generated in the client, and the list of certificates, as the name implicate, it is a list data structure stored bunch of certificates for authentication chain. Besides the first certificate in the list must be client’s, and the following certificates will be used in the authentication.</t>
+            <t>Phase 2: The server sends a PlsHello packet to the client. PlsHello packets of server is similar with client’s that server will also generate a random number in the PlsHello packet as nonce, and the list of certificate will send to the client. Same as client, the first certificate in the list belongs to server.</t>
+            <t>Phase 3: When the client receives a PlsHello packet from the server, a PlsKeyExchange packet is sent from client to the server. In the PlsKeyExchange packet, there are two fields: one is PreKey, a buffer data encrypted with server’s public key extracted from the certificate; the other is server’s nonce plus by one.</t>
+            <t>Phase 4: After the server receives a PlsKeyExchange packet from the server, a PlsKeyExchange packet will be sent from server to the client. In the PlsKeyExchange packet, there are two fields: one is PreKey, a buffer data encrypted with client’s public key extracted from the certificate; the other is client’s nonce plus by one.</t>
+            <t>Phase 5: The client sends server a PlsHandshakeDone packet, once it has packets from phase 1 and phase 4. It contains the hash of the packets from Phase 1 to Phase 4.</t>
+            <t>Phase 6: The server sends client a PlsHandshakeDone packet, once it has packets from phase 1 and phase 4. It contains the hash of the packets from Phase 1 to Phase 4. It contains the hash of the packets from Phase 1 to Phase 4.</t>
+            <t>Explanation: Phase 1 and 2 can start at the same time, which means server and client are able to start a synchronized handshake request. Phase 3 and 4 can be separately triggered. Once the server or client receives PlsHello packet, it will send a PlsKeyExchange packet to the other side, and the first side of sending PlsKeyExchange packet can be vary case by case. Phase 5 and 6 can be triggered only if server or client have already had packets from phase 1 to phase 4.</t>
+         </section>
+         <section title="Session Establishment">
+            <t>There are two conditions which will cause the session to be terminated. The first is that the server or client’s application layer believe they have sent all the message and call for the termination of the under layer. The second is that some errors occur during the handshaking process or data transmission in the PLS. Each of the condition will trigger the server or client send a PlsClose packet which contains an error message. Once the PlsClose packet is received, the server or client will call the transport layer’s close function for closing the transmission between server and client.</t>
+         </section>
+         <section title="Certificate Chain Verification">
+            <t>Verifying a certificate chain is the process of ensuring that a specific certificate chain is well-formed, valid, correctly signed, and trustworthy. The following procedure forms and verifies a certificate chain, beginning with the certificate that is presented for authentication:</t>
+            <t>1. The issuer's certificate is located. The source can be the verifier's local certificate database on that client or server, or the certificate chain that is provided by the subject.</t>
+            <t>2. The certificate signature is verified using the public key in the issuer's certificate.</t>
+            <t>3. If the issuer's certificate is trusted by the verifier, verification is successful and stops here.</t>
+            <t>Otherwise, the issuer's certificate is checked to ensure that it contains the appropriate subordinate certificate authority (CA) and verification of the certificate chain begins again with step 1 with the new certificate.</t>
+         </section>
+      </section>
+      <section title="Data Transmission">
+         <t>After the handshake is completed, the data transmission starts. The client and the server need to use the information they have obtained from the handshake. That information includes Nc, Ns, PKc, PKs. They use Nc, Ns, PKc, PKs to calculate six values- EKc, EKs, IVc, IVs, MKc and MKs- which will be used in the future data transmission. The calculating process is as follows.</t>
+       
+         <t>By connecting the "PLS1.0", Nc, Ns, PKc and PKs together, they get a new string. They need to calculate 5 values which are block0, block1, block2, block3, block4. The block0 equals to the hash value of the string. The block1 equals to the hash value of the block0. The block2 equals to the hash value of the block1. The block3 equals to the hash value of the block2. The block4 equals to the hash value of the block3. Each block is 160 bits. The sum of five blocks are 800 bits. These 800 bits can be cut up to create the 768 bits of keys and IV. The first 128 bits is encryption key EKc. The second 128 bits is EKs. The third 128 bits is Client encryption IV IVc. The forth 128 bits is Server encryption IV IVs. The fifth 128 bits is client MAC key MKc. The sixth 128 bits is server MAC key MKs. Now both the client and the server have the same EKc, EKs, IVc, IVs, MKc, MKs.</t>
+         <t>At the beginning of data transmission, the client and the server need to create encryption engine, decryption engine, HMAC-SHA1 MAC engine and verification engine. The client uses EKc as the key and IVc as the initial counter value to configure the encryption engine. And for the decryption engine, the client uses EKs as the key and IVs as the initial counter value to configure it. For the MAC engine, the client configures it with the key MKc. For the verification engine, the client configures it with key MKs. The server reserved the keys and IVs between engines.</t>
+         <t>To send data, the plain text P should be as the input to encryption engine to obtain the cipher text C. The cipher text C will be the input of the MAC engine to gain the verification code V. The cipher text C and the verification code V will be put into the PLS packet. And then this packet will be sent out.</t>
+         <t>When data is received, the cipher text is passed to the verification engine to produce a verification code V' to see if the V equals to V'. If V equals to V', the cipher text C is passed to the decryption engine to generate the plain text P'. This P' will be transmit to the higher layer.</t>
+         <t>If the V does not equal to the V', packets will be discarded until the number of the wrong consecutive verifications exceed a threshold. Once the number is greater than the threshold, either the client or the server in this condition must send a PlsClose packet with the error message.</t>
+         <t>If the transmission is completed, which means it is a normal shut down, the client or the server must send a PlsClose Packet without any error message. In the transmission, either side can close transmission by sending the PlsClose packet.</t>
+      </section>
+      <section title="Error Handling">
+         <t>Error handling refers to the anticipation, detection, and resolution of Playground Layer Security Protocol errors. Usually, calling error handlers when coming across error messages or exceptions. In the transmission process, there exist errors to be fixed.</t>
+         <section title="Error Handing in Handshake">
+            <t>As is detailed before, there are totally 6 procedures to perform during Playground Layer Security Protocol handshake. Thus, it is going to generate six messages that are M1, M2, M3, M4, M5 and M6. Specifically, M5 and M6 are two authentication messages to check that the PlsKeyExchange process is integrated and authorized. It is named PlsHandshakeDone procedure that both the server and the client are needed to perform. In PlsHandshakeDone instance, the SHA1 hash value of the splice of "M1, M2, M3, M4" is calculated separately on both the server side and the client side. Normally, the two hash values should be identical. If not, it is going to trigger the error handling module. By calling PlsClose packet, the protocol should be terminated immediately.</t>
+         </section>
+         
+         <section title="Error Handling in Data Transmission">
+            <t>In the data transmission, the verification code V' which is calculated by the cipher text C may not match the verification code contained in the packet. In this circumstance, the client or the server will ignore this packet until the number of times of the consecutive wrong verifications exceeding the threshold. The threshold is the maximum value of the failed verification tolerance. When the number exceeds the threshold, the client or the server must send a PlsClose packet with the error message to terminate the session.</t>
+            <t>It verifier cannot be found in the list, the program will call the close function terminating the illegal request. If the chain is not integrated, or the issuer fails to verify the certificate, the close function will be called.</t>
+         </section>
+        
+         <section title="Error Handing in Certificate Chain Verification">
+            <t>It verifier cannot be found in the list, the program will call the close function terminating the illegal request. If the chain is not integrated, or the issuer fails to verify the certificate, the close function will be called.</t>
+         </section>
+      </section>
+      <section title="Packets Description">
+         <t>In Playground Layer Security Protocol, there are totally 5 message packets definitions. The first packet is PlsHello Packet. PlsHello packet is initiated to process handshake process between client and server. In this packet field, there are 2 variables. "Nonce" is defined as a one-time number that is generated randomly. It is of UINT64 type and with the length of 64 bits. Besides, "Certs" is declared as a digital certificate to prove the ownership of a public key. It is of Python List type.</t>
+         <t>The second packet is PlsKeyExchange. This packet is a key exchange message sent between the server and the client to exchange encrypted public key and nonce. A BUFFER-typed "Preke" is proclaimed to store the data that will be used between the client and the server to exchange encrypted public key and nonce. "NoncePlusOne" is a UINT64-typed variable to make a comparison with the nonce analyzed from "Prekey".</t>
+         <t>The third packet is PlsHandshakeDone. This packet is served as a validation packet to make sure the data transported between the server and the client is all correct. It only contains a "ValidationHash" variable that is used to validate the SHA1 hash value of the messages transported between the server and the client.</t>
+         <t>The fourth packet is PlsData. This is packet stores the data including ciphertext message and verification code. When the plaintext message is prepared to be sent, it will be encrypted by the encryption engine to produce a ciphertext C. The ciphertext is then passed to the MAC engine to produce verification code V. C is stored in "ciphertext" variable. V is stored in "MAC" variable. These data are sent in a PLS Data message (C, V).</t>
+         <t>The fifth packet is PlsClose. This packet is instantiated when the server or the client wants to close the session. Its FIELD contains a string "Error" variable. It is considered to be a normal shutdown when containing no error message. If either side receives an error message, they must shut down the session immediately.</t>
+      </section>
+     
+      <section title="State Machine">
+         <t>The goal of state machine is to control the transport-layer protocol status. In the transport layer, the protocol has to accomplish hand-shaking for connection, hand-waving for termination, and data-transfer process. The protocol should be designed with separated status which can only be trigged by specific action for preventing potential attacks. Furthermore, because the packets processed by client and server are different while establishing a connection and clearing a connection, the design of status machine between server and client have to be different. Both of the client and server have 5 phases in status for controlling the basic transporting process.</t>
+      
+
+         <figure align="center">
+            <preamble />
+            <artwork align="left"><![CDATA[
+
+            Client                                      Server
+           +------+                                    +------+
+       --->|phase1|---------PlsHello(Nc,C_certs)------>|phase1|<---
+      |    +------+                                    +------+    |
+      |       |                                            |       |
+      |    +------+                                    +------+    |
+      | <--|phase2|<--------PlsHello(Ns,S_certs)-------|phase2|--> |
+      |    +------+                                    +------+    |
+      |       |                                            |       |
+      |    +------+                                    +------+    |
+      P <--|Phase3| --PlsKeyExchange({PKc}S_pub,Ns+1)->|phase3|--> P
+      l    +------+                                    +------+    l
+      s       |                                            |       s
+      C    +------+                                    +------+    C
+      l <--|phase4|<--PlsKeyExchange({PKs}C_pub,Nc+1)--|phase4|--> l
+      o    +------+                                    +------+    o
+      s       |                                            |       s
+      e    +------+                                    +------+    e
+      ( <--|phase5| --------PlsHandshakeDone(SHA1)---->|phase5|--> (
+      E    +------+                                    +------+    E
+      r       |                                            |       r
+      r    +------+                                    +------+    r
+      o <--|phase6|<--------PlsHandshakeDone(SHA1)-----|phase6|--> o
+      r    +------+                                    +------+    r
+      )       |--------------Session Established-----------|       )
+      |    +------+                                    +------+    |
+      | <--|phase7|<--------------PlsData(C,V)-------->|phase7|--> |
+      |    +------+                                    +------+    |
+      |       |                                            |       |
+      |    +------+                                    +------+    |
+       ----|phase8|<--------------PlsClose----------->-|phase8|----
+           +---+--+                                    +------+
+               |                                           |
+               |-------------Session Terminated------------|
+               |                                           |
+
+            ]]></artwork>
+            <postamble />
+         </figure>
+      </section>
+      <section title="Summary">
+         <t>In the PRFC (Playground Request For Comments) document, we described the background and purpose for us to design the PLS (Playground Layer Security). In the session part, we represented the session establishment, including six phases for handshake, and how session terminate in two conditions. After session have established, it comes to data transmission. In this part, we represented how data will be encrypted and decrypted during the transmission. And we described the countermeasure that we implemented in PLS to handle the error in both handshake establishment and data transmission. In addition, we described all the five packets we defined in the PLS about data structure used in these packets. Finally, we represented the state machine which showed the state transition in this layer.</t>
+      </section>
+   </middle>
+   <!--  *****BACK MATTER ***** -->
+   <back>
+      <!-- References split into informative and normative -->
+      <!-- There are 2 ways to insert reference entries from the citation libraries:
+    1. define an ENTITY at the top, and use "ampersand character"RFC2629; here (as shown)
+    2. simply use a PI "less than character"?rfc include="reference.RFC.2119.xml"?> here
+       (for I-Ds: include="reference.I-D.narten-iana-considerations-rfc2434bis.xml")
+
+    Both are cited textually in the same manner: by using xref elements.
+    If you use the PI option, xml2rfc will, by default, try to find included files in the same
+    directory as the including file. You can also define the XML_LIBRARY environment variable
+    with a value containing a set of directories to search.  These can be either in the local
+    filing system or remote ones accessed by http (http://domain/dir/... ).-->
+      <references title="Normative References">
+         <!--?rfc include="http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.2119.xml"?-->
+         &RFC2119;
+     
+     &RFC2360;
+      </references>
+      <!-- Change Log
+
+v00 2006-03-15  EBD   Initial version
+
+v01 2006-04-03  EBD   Moved PI location back to position 1 -
+                     v3.1 of XMLmind is better with them at this location.
+v02 2007-03-07  AH    removed extraneous nested_list attribute,
+                     other minor corrections
+v03 2007-03-09  EBD   Added comments on null IANA sections and fixed heading capitalization.
+                     Modified comments around figure to reflect non-implementation of
+                     figure indent control.  Put in reference using anchor="DOMINATION".
+                     Fixed up the date specification comments to reflect current truth.
+v04 2007-03-09 AH     Major changes: shortened discussion of PIs,
+                     added discussion of rfc include.
+v05 2007-03-10 EBD    Added preamble to C program example to tell about ABNF and alternative 
+                     images. Removed meta-characters from comments (causes problems).
+
+v06 2010-04-01 TT     Changed ipr attribute values to latest ones. Changed date to
+                     year only, to be consistent with the comments. Updated the 
+                     IANA guidelines reference from the I-D to the finished RFC.  
+                     
+SETH NIELSON:
+  Altered for PLAYGROUND AND PRFC's
+  2016-09-21 SJN PRFC 1
+
+  Updated for Fall 2017
+  2017-10-1
+  -->
+   </back>
+</rfc>
