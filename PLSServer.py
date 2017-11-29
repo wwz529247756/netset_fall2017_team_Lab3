@@ -23,6 +23,9 @@ import codecs
 from Crypto.Hash import HMAC, SHA
 import OpenSSL
 from playground.common.CipherUtil import RSA_SIGNATURE_MAC
+from cryptography import x509
+from cryptography.hazmat.backends import default_backend
+from cryptography.x509.oid import NameOID
 
 
 #import playground.crypto
@@ -30,23 +33,27 @@ from playground.common.CipherUtil import RSA_SIGNATURE_MAC
 
 class PLSServer(StackingProtocol):
     def __init__(self):
-        self.privatekeyaddr = "/Users/wangweizhou/Desktop/public&private_key/Server/key.pem"
-        self.certificateaddr = "/Users/wangweizhou/Desktop/public&private_key/Server/certificate.pem"
+        self.privatekeyaddr = "/Users/wangweizhou/Desktop/public&private_key/host/Dumplinghostprivate.pem"
+        self.hostmediacert = "/Users/wangweizhou/Desktop/public&private_key/host/Dumplinghostcert.cert"
         self.rootaddr = "/Users/wangweizhou/Desktop/public&private_key/root/root.crt"
+        self.intermidiacertaddr = "/Users/wangweizhou/Desktop/public&private_key/intermedia/DumplingCertificate.cert"
         self.transport = None
         self.ClientNonce = None
         self.ServerNonce = random.randint(10000,99999)
         self.deserializer = BasePacketType.Deserializer()
         self.rawKey = getPrivateKeyForAddr(self.privatekeyaddr)
         self.privateKey = RSA.importKey(self.rawKey)
-        self.ServerCertificate = getCertificateForAddr(self.certificateaddr)
+        self.ServerCertificate = getCertificateForAddr(self.hostmediacert)
+        self.intermediaCert = getCertificateForAddr(self.intermidiacertaddr)
         self.rootcert = getRootCert(self.rootaddr)
         self.ServerCert=LIST(BUFFER)
         self.ServerCert.append(self.ServerCertificate.encode())
+        self.ServerCert.append(self.intermediaCert.encode())
         self.ServerCert.append(self.rootcert.encode())
         self.ClientCert=LIST(BUFFER)
         self.PacketList = []
         self.status = 0
+        self.Certobject = []
         
     def connection_made(self,transport):
         self.transport=transport
@@ -60,18 +67,24 @@ class PLSServer(StackingProtocol):
             if self.status == 0:
                 self.PacketList.append(pkt)
                 if isinstance(pkt, PlsHello):
-                    print("Server: Hellopacket receive!")
-                    self.ClientNonce = pkt.Nonce
                     self.ClientCert = pkt.Certs
-                    self.ClientCertificate = self.ClientCert[0].decode()
-                    self.tmpPublickey = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, self.ClientCertificate).get_pubkey()
-                    self.publickeystring = OpenSSL.crypto.dump_publickey(OpenSSL.crypto.FILETYPE_PEM, self.tmpPublickey).decode()
-                    self.clientPublicKey = RSA.importKey(self.publickeystring)
-                    HelloPacket = PlsHello()
-                    HelloPacket.Nonce = self.ServerNonce
-                    HelloPacket.Certs = self.ServerCert
-                    self.transport.write(HelloPacket.__serialize__())
-                    self.PacketList.append(HelloPacket)
+                    if self.ChainVerifyer(self.ClientCert):
+                        print("Server: Hellopacket receive!")
+                        self.ClientNonce = pkt.Nonce
+                        self.ClientCertificate = self.ClientCert[0].decode()
+                        self.tmpPublickey = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, self.ClientCertificate).get_pubkey()
+                        self.publickeystring = OpenSSL.crypto.dump_publickey(OpenSSL.crypto.FILETYPE_PEM, self.tmpPublickey).decode()
+                        self.clientPublicKey = RSA.importKey(self.publickeystring)
+                        HelloPacket = PlsHello()
+                        HelloPacket.Nonce = self.ServerNonce
+                        HelloPacket.Certs = self.ServerCert
+                        self.transport.write(HelloPacket.__serialize__())
+                        self.PacketList.append(HelloPacket)
+                    else:
+                        print("Server: Authentication ERROR!")
+                     
+                    
+                        
                     #print(self.ClientCertificate)
                     
                 if isinstance(pkt, PlsKeyExchange):
@@ -110,11 +123,27 @@ class PLSServer(StackingProtocol):
                         self.higherProtocol().data_received(higherData)
     
     def ChainVerifyer(self, certs):
-        for i in range(len(certs)-1):
-            this = certs[i]
-            issuer = RSA_SIGNATURE_MAC(certs[i+1].public_key())
+        for cert in certs:
+            self.Certobject.append(x509.load_pem_x509_certificate(cert, default_backend()))
+        
+        address = self.transport.get_extra_info("peername")[0]
+        if(address!=self.Certobject[0].subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value):
+            return False
+        
+        verifyaddr = address
+        for i in range(len(self.Certobject)):
+            if(verifyaddr.startswith(self.Certobject[i].subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value)):
+                verifyaddr = self.Certobject[i].subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
+            else:
+                return False
+        
+        
+        for i in range(len(self.Certobject)-1):
+            this = self.Certobject[i]
+            issuer = RSA_SIGNATURE_MAC(self.Certobject[i+1].public_key())
             if not issuer.verify(this.tbs_certificate_bytes, this.signature):
                 return False
+        print("Certification Authentication Passed!")
         return True
     
     def VerificationEngine(self, ciphertext):

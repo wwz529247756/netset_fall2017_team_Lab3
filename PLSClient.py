@@ -23,29 +23,35 @@ import codecs
 from Crypto.Hash import HMAC, SHA
 import OpenSSL
 from playground.common.CipherUtil import RSA_SIGNATURE_MAC
-
+from cryptography import x509
+from cryptography.hazmat.backends import default_backend
+from cryptography.x509.oid import NameOID
 
 
 
 class PLSClient(StackingProtocol):
     def __init__(self):
         super().__init__
-        self.privatekeyaddr = "/Users/wangweizhou/Desktop/public&private_key/Client/key.pem"
-        self.certificateaddr = "/Users/wangweizhou/Desktop/public&private_key/Client/certificate.pem"
+        self.privatekeyaddr = "/Users/wangweizhou/Desktop/public&private_key/host/Dumplinghostprivate.pem"
+        self.hostmediacert = "/Users/wangweizhou/Desktop/public&private_key/host/Dumplinghostcert.cert"
         self.rootaddr = "/Users/wangweizhou/Desktop/public&private_key/root/root.crt"
+        self.intermidiacertaddr = "/Users/wangweizhou/Desktop/public&private_key/intermedia/DumplingCertificate.cert"
         self.transport = None
         self.ClientNonce = random.randint(10000,99999)
         self.ServerNonce = None
         self.deserializer = BasePacketType.Deserializer()
         self.privateKeystring = getPrivateKeyForAddr(self.privatekeyaddr)
         self.privateKey = RSA.importKey(self.privateKeystring)
-        self.certificate = getCertificateForAddr(self.certificateaddr)
+        self.certificate = getCertificateForAddr(self.hostmediacert)
+        self.intermediaCert = getCertificateForAddr(self.intermidiacertaddr)
         self.rootcert = getRootCert(self.rootaddr)
         self.ClientCert=LIST(BUFFER)
         self.ClientCert.append(self.certificate.encode())
+        self.ClientCert.append(self.intermediaCert.encode())
         self.ClientCert.append(self.rootcert.encode())
         self.ServerCert=LIST(BUFFER)
         self.PacketsList = []
+        self.Certobject = []
         
         
         
@@ -73,23 +79,28 @@ class PLSClient(StackingProtocol):
         for pkt in self.deserializer.nextPackets():
             if self.status ==0:
                 if isinstance(pkt, PlsHello):
-                    print("Client: PlsHello packet receive!")
-                    self.PacketsList.append(pkt)
-                    self.ServerNonce = pkt.Nonce
                     self.ServerCert = pkt.Certs
-                    self.ServerCertificate = self.ServerCert[0].decode()
-                    self.tmpPublickey = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, self.ServerCertificate).get_pubkey()
-                    self.publickeystring = OpenSSL.crypto.dump_publickey(OpenSSL.crypto.FILETYPE_PEM, self.tmpPublickey).decode()
-                    self.serverPublicKey = RSA.importKey(self.publickeystring)
-                    KeyExchangePacket = PlsKeyExchange()
-                    self.ClientPrekey = b"helloworld"
-                    cipher = self.serverPublicKey.encrypt(self.ClientPrekey, 32)[0]
-                    KeyExchangePacket.PreKey = cipher
-                    KeyExchangePacket.NoncePlusOne = self.ServerNonce+1;
-                    self.transport.write(KeyExchangePacket.__serialize__())
-                    print("Client: KeyExchange sent!")
-                    self.PacketsList.append(KeyExchangePacket)
-                    #print(self.ServerNonce.__str__().encode())
+                    if self.ChainVerifyer(self.ServerCert):
+                        print("Client: PlsHello packet receive!")
+                        self.PacketsList.append(pkt)
+                        self.ServerNonce = pkt.Nonce
+                        self.ServerCertificate = self.ServerCert[0].decode()
+                        self.tmpPublickey = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, self.ServerCertificate).get_pubkey()
+                        self.publickeystring = OpenSSL.crypto.dump_publickey(OpenSSL.crypto.FILETYPE_PEM, self.tmpPublickey).decode()
+                        self.serverPublicKey = RSA.importKey(self.publickeystring)
+                        KeyExchangePacket = PlsKeyExchange()
+                        self.ClientPrekey = b"helloworld"
+                        cipher = self.serverPublicKey.encrypt(self.ClientPrekey, 32)[0]
+                        KeyExchangePacket.PreKey = cipher
+                        KeyExchangePacket.NoncePlusOne = self.ServerNonce+1;
+                        self.transport.write(KeyExchangePacket.__serialize__())
+                        print("Client: KeyExchange sent!")
+                        self.PacketsList.append(KeyExchangePacket)
+                    else:
+                        print("Client: Authentication Error!")
+                    
+                        
+                        
                 if isinstance(pkt, PlsKeyExchange):
                     print("Client: PlskeyExchange receive!")
                     self.PacketsList.append(pkt)
@@ -117,14 +128,36 @@ class PLSClient(StackingProtocol):
                     if pkt.Mac == self.VerificationEngine(pkt.Ciphertext):
                         higherData = self.decryptEngine(pkt.Ciphertext)
                         self.higherProtocol().data_received(higherData)
-            
+    
+    
+    
     def ChainVerifyer(self, certs):
-        for i in range(len(certs)-1):
-            this = certs[i]
-            issuer = RSA_SIGNATURE_MAC(certs[i+1].public_key())
+        for cert in certs:
+            self.Certobject.append(x509.load_pem_x509_certificate(cert, default_backend()))
+        
+        address = self.transport.get_extra_info("peername")[0]
+        if(address!=self.Certobject[0].subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value):
+            return False
+        
+        verifyaddr = address
+        for i in range(len(self.Certobject)):
+            if(verifyaddr.startswith(self.Certobject[i].subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value)):
+                verifyaddr = self.Certobject[i].subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
+            else:
+                return False
+        
+        
+        for i in range(len(self.Certobject)-1):
+            this = self.Certobject[i]
+            issuer = RSA_SIGNATURE_MAC(self.Certobject[i+1].public_key())
             if not issuer.verify(this.tbs_certificate_bytes, this.signature):
                 return False
+        print("Certification Authentication Passed!")
         return True
+    
+    
+    
+    
     
     def VerificationEngine(self, ciphertext):
         hm = HMAC.new(self.MKs, digestmod=SHA)
