@@ -32,7 +32,7 @@ from cryptography.x509.oid import NameOID
 class PLSClient(StackingProtocol):
     def __init__(self):
         super().__init__
-        self.transport = None
+        
         self.ClientNonce = random.randint(10000,99999)
         self.ServerNonce = None
         self.deserializer = BasePacketType.Deserializer()
@@ -47,13 +47,15 @@ class PLSClient(StackingProtocol):
         
         
     def connection_made(self,transport):
-        print("Client: PLS initialized!")
         address, port = transport.get_extra_info("sockname")
         self.rawKey = getPrivateKeyForAddr(address)
         self.privateKey = RSA.importKey(self.rawKey)
         self.ClientCert = getCertificateForAddr(address)
+        
+        print("Client: PLS initialized!")
         self.transport=transport
         self.higherTransport = PlsTransport(self.transport, self)
+        #self.higherProtocol().connection_made(higherTransport)
         HelloPacket = PlsHello()
         HelloPacket.Nonce = self.ClientNonce
         HelloPacket.Certs = self.ClientCert  # required for modification

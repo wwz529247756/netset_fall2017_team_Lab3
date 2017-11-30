@@ -64,11 +64,10 @@ class TranCliProto(StackingProtocol):
                     self.RecSeq = pkt.SequenceNumber
                     AckPkt = PEEPPacket()
                     AckPkt.Type = 2
-                    AckPkt.Checksum = 0
                     AckPkt.SequenceNumber = self.SenSeq
                     AckPkt.Acknowledgement = self.RecSeq + 1
+                    AckPkt.Checksum = AckPkt.calculateChecksum()
                     self.RecSeq=AckPkt.Acknowledgement
-                    AckPkt.updateChecksum()
                     self.transport.write(AckPkt.__serialize__())
                     self.Status = 2
                     print("Client: Ack sent!")
@@ -110,21 +109,19 @@ class TranCliProto(StackingProtocol):
                         self.higherProtocol().data_received(pkt.Data)                                                                                                                                           
                         dataAck = PEEPPacket()
                         dataAck.Type = 2
-                        dataAck.Checksum = 0
                         dataAck.SequenceNumber = 0
                         dataAck.Data = b""
                         dataAck.Acknowledgement = pkt.SequenceNumber + len(pkt.Data)
-                        dataAck.updateChecksum()
+                        dataAck.Checksum = dataAck.calculateChecksum()
                         self.transport.write(dataAck.__serialize__())
                         self.expectSeq = dataAck.Acknowledgement
                     else:
                         dataAck = PEEPPacket()
                         dataAck.Type = 2
-                        dataAck.Checksum = 0
                         dataAck.SequenceNumber = 0
                         dataAck.Data = b""
                         dataAck.Acknowledgement = self.expectSeq
-                        dataAck.updateChecksum()
+                        dataAck.Checksum = dataAck.calculateChecksum()
                         self.transport.write(dataAck.__serialize__())
                     
                 if pkt.Type == 3:
@@ -143,10 +140,6 @@ class TranCliProto(StackingProtocol):
                     ServerRipAckPacket.updateChecksum()
                     self.transport.write(ServerRipAckPacket.__serialize__())
                     self.connection_lost("REQUEST!")
-                    '''
-                        Only transfer data in the buffer!
-                        Waiting for the transportation complete!
-                    '''
             if self.Status ==3:
                 if pkt.Type == 4:
                     if not pkt.verifyChecksum():
@@ -159,10 +152,8 @@ class TranCliProto(StackingProtocol):
     def connection_request(self):
         handshakeRequest = PEEPPacket()
         handshakeRequest.Type = 0
-        handshakeRequest.Acknowledgement = 0
         handshakeRequest.SequenceNumber =  self.randomSeq # currently the range is [0,99]
-        handshakeRequest.Checksum = 0  # have to be improved in the future
-        handshakeRequest.updateChecksum()
+        handshakeRequest.Checksum = handshakeRequest.calculateChecksum()
         self.SenSeq = self.randomSeq+1
         print("Client: Connection Request sent! Sequence Number:", handshakeRequest.SequenceNumber)
         #self.transport.write(handshakeRequest.__serialize__())

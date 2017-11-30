@@ -33,7 +33,6 @@ from cryptography.x509.oid import NameOID
 
 class PLSServer(StackingProtocol):
     def __init__(self):
-        
         self.transport = None
         self.ClientNonce = None
         self.ServerNonce = random.randint(10000,99999)

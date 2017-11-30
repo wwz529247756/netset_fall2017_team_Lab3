@@ -14,7 +14,7 @@ class TranTransport(StackingTransport):
         self._lowerTransport = lowerTransport
         self.protocol = protocol
         self.buffer = []        #Packet buffer
-        self.Size = 1000
+        self.Size = 50
         self.windowSize = 5 * self.Size
         self.protocol.packetsize = self.Size
         self.window = []  # Sliding window: recording the sequence number of the packets that has been sent
@@ -59,7 +59,7 @@ class TranTransport(StackingTransport):
                 Pkt.Acknowledgement = 0 
                 Pkt.Data = unit #把数据放入data
                 #Pkt.Checksum = 0
-                Pkt.updateChecksum()
+                Pkt.Checksum = Pkt.calculateChecksum()
                 self.lowerTransport().write(Pkt.__serialize__()) 
                 self.seqStore.append(self.protocol.SenSeq) 
          

@@ -61,11 +61,10 @@ class TranSerProto(StackingProtocol):
                     self.RecSeq = pkg.SequenceNumber
                     tmpkg = PEEPPacket()
                     tmpkg.Type = 1
-                    tmpkg.Checksum = 0
                     tmpkg.SequenceNumber = self.randSeq
                     self.SenSeq = tmpkg.SequenceNumber
                     tmpkg.Acknowledgement = self.RecSeq + 1
-                    tmpkg.updateChecksum()
+                    tmpkg.Checksum = tmpkg.calculateChecksum()
                     print("Server: Ack+Syn sent!")
                     self.transport.write(tmpkg.__serialize__())
                     
@@ -117,23 +116,22 @@ class TranSerProto(StackingProtocol):
                         self.higherProtocol().data_received(pkg.Data)                                                                                                                                           
                         dataAck = PEEPPacket()
                         dataAck.Type = 2
-                        dataAck.Checksum = 0
+                        
                         dataAck.SequenceNumber = 0
                         dataAck.Data = b""
-                        #dataAck.Acknowledgement = 0
                         dataAck.Acknowledgement = pkg.SequenceNumber + len(pkg.Data)
-                        dataAck.updateChecksum()
+                        dataAck.Checksum = dataAck.calculateChecksum()
                         self.transport.write(dataAck.__serialize__())
                         self.expectSeq = dataAck.Acknowledgement
                     else:
                         dataAck = PEEPPacket()
                         dataAck.Type = 2
-                        dataAck.Checksum = 0
+                        
                         dataAck.SequenceNumber = 0
                         dataAck.Data = b""
                         dataAck.Acknowledgement = self.expectSeq
                         #dataAck.Acknowledgement = pkg.SequenceNumber + len(pkg.Data)
-                        dataAck.updateChecksum()
+                        dataAck.Checksum = dataAck.calculateChecksum()
                         self.transport.write(dataAck.__serialize__())
                 if pkg.Type == 3:
                     if not pkg.verifyChecksum():
@@ -147,8 +145,7 @@ class TranSerProto(StackingProtocol):
                     self.SenSeq += 1
                     ServerRipAckPacket.SequenceNumber = self.SenSeq
                     self.Status = "HalfActivated"
-                    ServerRipAckPacket.Checksum = 0
-                    ServerRipAckPacket.updateChecksum()
+                    ServerRipAckPacket.Checksum = ServerRipAckPacket.calculateChecksum()
                     self.transport.write(ServerRipAckPacket.__serialize__())
                     self.loop.call_later(10,self.connection_lost, "client request")
                     '''
