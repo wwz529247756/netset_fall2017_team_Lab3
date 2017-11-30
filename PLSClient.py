@@ -32,23 +32,11 @@ from cryptography.x509.oid import NameOID
 class PLSClient(StackingProtocol):
     def __init__(self):
         super().__init__
-        self.privatekeyaddr = "/Users/wangweizhou/Desktop/public&private_key/host/Dumplinghostprivate.pem"
-        self.hostmediacert = "/Users/wangweizhou/Desktop/public&private_key/host/Dumplinghostcert.cert"
-        self.rootaddr = "/Users/wangweizhou/Desktop/public&private_key/root/root.crt"
-        self.intermidiacertaddr = "/Users/wangweizhou/Desktop/public&private_key/intermedia/DumplingCertificate.cert"
         self.transport = None
         self.ClientNonce = random.randint(10000,99999)
         self.ServerNonce = None
         self.deserializer = BasePacketType.Deserializer()
-        self.privateKeystring = getPrivateKeyForAddr(self.privatekeyaddr)
-        self.privateKey = RSA.importKey(self.privateKeystring)
-        self.certificate = getCertificateForAddr(self.hostmediacert)
-        self.intermediaCert = getCertificateForAddr(self.intermidiacertaddr)
-        self.rootcert = getRootCert(self.rootaddr)
         self.ClientCert=LIST(BUFFER)
-        self.ClientCert.append(self.certificate.encode())
-        self.ClientCert.append(self.intermediaCert.encode())
-        self.ClientCert.append(self.rootcert.encode())
         self.ServerCert=LIST(BUFFER)
         self.PacketsList = []
         self.Certobject = []
@@ -60,9 +48,12 @@ class PLSClient(StackingProtocol):
         
     def connection_made(self,transport):
         print("Client: PLS initialized!")
+        address, port = transport.get_extra_info("sockname")
+        self.rawKey = getPrivateKeyForAddr(address)
+        self.privateKey = RSA.importKey(self.rawKey)
+        self.ClientCert = getCertificateForAddr(address)
         self.transport=transport
         self.higherTransport = PlsTransport(self.transport, self)
-        #self.higherProtocol().connection_made(higherTransport)
         HelloPacket = PlsHello()
         HelloPacket.Nonce = self.ClientNonce
         HelloPacket.Certs = self.ClientCert  # required for modification

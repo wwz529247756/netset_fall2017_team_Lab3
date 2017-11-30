@@ -33,29 +33,22 @@ from cryptography.x509.oid import NameOID
 
 class PLSServer(StackingProtocol):
     def __init__(self):
-        self.privatekeyaddr = "/Users/wangweizhou/Desktop/public&private_key/host/Dumplinghostprivate.pem"
-        self.hostmediacert = "/Users/wangweizhou/Desktop/public&private_key/host/Dumplinghostcert.cert"
-        self.rootaddr = "/Users/wangweizhou/Desktop/public&private_key/root/root.crt"
-        self.intermidiacertaddr = "/Users/wangweizhou/Desktop/public&private_key/intermedia/DumplingCertificate.cert"
+        
         self.transport = None
         self.ClientNonce = None
         self.ServerNonce = random.randint(10000,99999)
         self.deserializer = BasePacketType.Deserializer()
-        self.rawKey = getPrivateKeyForAddr(self.privatekeyaddr)
-        self.privateKey = RSA.importKey(self.rawKey)
-        self.ServerCertificate = getCertificateForAddr(self.hostmediacert)
-        self.intermediaCert = getCertificateForAddr(self.intermidiacertaddr)
-        self.rootcert = getRootCert(self.rootaddr)
         self.ServerCert=LIST(BUFFER)
-        self.ServerCert.append(self.ServerCertificate.encode())
-        self.ServerCert.append(self.intermediaCert.encode())
-        self.ServerCert.append(self.rootcert.encode())
         self.ClientCert=LIST(BUFFER)
         self.PacketList = []
         self.status = 0
         self.Certobject = []
         
     def connection_made(self,transport):
+        address, port = transport.get_extra_info("sockname")
+        self.rawKey = getPrivateKeyForAddr(address)
+        self.privateKey = RSA.importKey(self.rawKey)
+        self.ServerCert = getCertificateForAddr(address)
         self.transport=transport
         self.higherTransport = PlsTransport(self.transport, self)
         
