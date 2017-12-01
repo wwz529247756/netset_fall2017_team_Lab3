@@ -14,7 +14,7 @@ class BasePacketType(PacketType):
 
 class PlsHello(BasePacketType):
     DEFINITION_IDENTIFIER = "netsecfall2017.pls.hello"
-    DEFINITION_VERSION = "2.0"
+    DEFINITION_VERSION = "1.0"
     FIELDS = [
         ("Nonce", UINT64),
         ("Certs", LIST(BUFFER))
@@ -22,7 +22,7 @@ class PlsHello(BasePacketType):
 
 class PlsKeyExchange(BasePacketType):
     DEFINITION_IDENTIFIER = "netsecfall2017.pls.keyexchange"
-    DEFINITION_VERSION = "2.0"
+    DEFINITION_VERSION = "1.0"
     FIELDS = [
         ("PreKey", BUFFER),
         ("NoncePlusOne", UINT64),
@@ -30,14 +30,14 @@ class PlsKeyExchange(BasePacketType):
 
 class PlsHandshakeDone(BasePacketType):
     DEFINITION_IDENTIFIER = "netsecfall2017.pls.handshakedone"
-    DEFINITION_VERSION = "2.0"
+    DEFINITION_VERSION = "1.0"
     FIELDS = [
         ("ValidationHash", BUFFER)
     ]
 
 class PlsData(BasePacketType):
     DEFINITION_IDENTIFIER = "netsecfall2017.pls.data"
-    DEFINITION_VERSION = "2.0"
+    DEFINITION_VERSION = "1.0"
     FIELDS = [
         ("Ciphertext", BUFFER),
         ("Mac", BUFFER)
@@ -45,7 +45,7 @@ class PlsData(BasePacketType):
 
 class PlsClose(BasePacketType):
     DEFINITION_IDENTIFIER = "netsecfall2017.pls.close"
-    DEFINITION_VERSION = "2.0"
+    DEFINITION_VERSION = "1.0"
     FIELDS = [
         ("Error", STRING)
     ]

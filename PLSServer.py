@@ -26,7 +26,9 @@ from playground.common.CipherUtil import RSA_SIGNATURE_MAC
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.x509.oid import NameOID
-
+import os
+from Crypto.Cipher.PKCS1_OAEP import PKCS1OAEP_Cipher
+from binascii import hexlify
 
 #import playground.crypto
 
@@ -82,10 +84,12 @@ class PLSServer(StackingProtocol):
                 if isinstance(pkt, PlsKeyExchange):
                     print("Server: PlsKeyExchange receive!")
                     self.PacketList.append(pkt)
-                    self.ClientPrekey = self.privateKey.decrypt(pkt.PreKey)
+                    self.ClientPrekey = PKCS1OAEP_Cipher(self.privateKey, None, None, None).decrypt(pkt.PreKey)
                     KeyExchangePacket = PlsKeyExchange()
-                    self.ServerPrekey = b'worldhello'
-                    KeyExchangePacket.PreKey = self.clientPublicKey.encrypt(self.ServerPrekey, 32)[0]
+                    self.ServerPrekey = os.urandom(16)
+                    Encrypter = PKCS1OAEP_Cipher(self.clientPublicKey, None, None, None)
+                    cipher = Encrypter.encrypt(self.ServerPrekey)
+                    KeyExchangePacket.PreKey = cipher
                     KeyExchangePacket.NoncePlusOne = self.ClientNonce+1
                     self.transport.write(KeyExchangePacket.__serialize__())
                     print("Server: KeyExchange sent!")
@@ -102,6 +106,11 @@ class PLSServer(StackingProtocol):
                     HandshakeDonePacket.ValidationHash = self.hashvalidation.encode()
                     self.transport.write(HandshakeDonePacket.__serialize__())
                     self.CalHash()
+                    self.encrt = Counter.new(128, initial_value=int(hexlify(self.IVs),16))
+                    self.aesEncrypter = AES.new(self.EKs, counter=self.encrt, mode=AES.MODE_CTR)
+                    self.decrt = Counter.new(128, initial_value=int(hexlify(self.IVc),16))
+                    self.aesDecrypter = AES.new(self.EKc, counter=self.decrt, mode=AES.MODE_CTR)
+                    
                     self.higherProtocol().connection_made(self.higherTransport)
                     self.status=1
                 
@@ -113,7 +122,8 @@ class PLSServer(StackingProtocol):
                     if pkt.Mac == self.VerificationEngine(pkt.Ciphertext):
                         higherData = self.decryptEngine(pkt.Ciphertext)
                         self.higherProtocol().data_received(higherData)
-    
+                    
+                    
     def ChainVerifyer(self, certs):
         for cert in certs:
             self.Certobject.append(x509.load_pem_x509_certificate(cert, default_backend()))
@@ -149,31 +159,29 @@ class PLSServer(StackingProtocol):
         return hm.digest()
                 
     def encryptEngine(self, plaintext):
-        crt = Counter.new(128, initial_value=int(codecs.encode(self.IVs, 'hex_codec'),16))
-        aesEncrypter = AES.new(self.EKs, counter=crt, mode=AES.MODE_CTR)
-        ciphertext = aesEncrypter.encrypt(plaintext)
+        ciphertext = self.aesEncrypter.encrypt(plaintext)
         return ciphertext
     
     def decryptEngine(self, ciphertext):
-        crt = Counter.new(128, initial_value=int(codecs.encode(self.IVc, 'hex_codec'),16))
-        aesDecrypter = AES.new(self.EKc, counter=crt, mode=AES.MODE_CTR)
-        plaintext = aesDecrypter.decrypt(ciphertext)
+        plaintext = self.aesDecrypter.decrypt(ciphertext)
         return plaintext
     
     def CalHash(self):
-        hashdata = b"PLS1.0" + self.ClientNonce.__str__().encode() + self.ServerNonce.__str__().encode() + self.ClientPrekey + self.ServerPrekey
-        block0 = hashlib.sha1(hashdata).hexdigest()
-        block1 = hashlib.sha1(block0.encode()).hexdigest()
-        block2 = hashlib.sha1(block1.encode()).hexdigest()
-        block3 = hashlib.sha1(block2.encode()).hexdigest()
-        block4 = hashlib.sha1(block3.encode()).hexdigest()
-        keyset = block0.encode() + block1.encode() + block2.encode() + block3.encode() + block4.encode()
-        self.EKc = keyset[0:32]
-        self.EKs = keyset[32:64]
-        self.IVc = keyset[64:96]
-        self.IVs = keyset[96:128]
-        self.MKc = keyset[128:160]
-        self.MKs = keyset[160:192]
+        hashdata = b'PLS1.0' + self.ClientNonce.to_bytes(8,byteorder="big") + self.ServerNonce.to_bytes(8,byteorder="big") + self.ClientPrekey + self.ServerPrekey
+        block0 = hashlib.sha1(hashdata).digest()
+        block1 = hashlib.sha1(block0).digest()
+        block2 = hashlib.sha1(block1).digest()
+        block3 = hashlib.sha1(block2).digest()
+        block4 = hashlib.sha1(block3).digest()
+        keyset = block0 + block1 + block2 + block3 + block4
+    
+        self.EKc = keyset[0:16]
+        self.EKs = keyset[16:32]
+        self.IVc = keyset[32:48]
+        self.IVs = keyset[48:64]
+        self.MKc = keyset[64:80]
+        self.MKs = keyset[80:96]
+        
                 
     def connection_lost(self,exc):
         print('Connection stopped because {}'.format(exc))

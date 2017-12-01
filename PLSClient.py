@@ -26,6 +26,9 @@ from playground.common.CipherUtil import RSA_SIGNATURE_MAC
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.x509.oid import NameOID
+import os
+from Crypto.Cipher.PKCS1_OAEP import PKCS1OAEP_Cipher
+from binascii import hexlify
 
 
 
@@ -82,10 +85,11 @@ class PLSClient(StackingProtocol):
                         self.publickeystring = OpenSSL.crypto.dump_publickey(OpenSSL.crypto.FILETYPE_PEM, self.tmpPublickey).decode()
                         self.serverPublicKey = RSA.importKey(self.publickeystring)
                         KeyExchangePacket = PlsKeyExchange()
-                        self.ClientPrekey = b"helloworld"
-                        cipher = self.serverPublicKey.encrypt(self.ClientPrekey, 32)[0]
+                        self.ClientPrekey = os.urandom(16)
+                        Encrypter = PKCS1OAEP_Cipher(self.serverPublicKey, None, None, None)
+                        cipher = Encrypter.encrypt(self.ClientPrekey)
                         KeyExchangePacket.PreKey = cipher
-                        KeyExchangePacket.NoncePlusOne = self.ServerNonce+1;
+                        KeyExchangePacket.NoncePlusOne = self.ServerNonce+1
                         self.transport.write(KeyExchangePacket.__serialize__())
                         print("Client: KeyExchange sent!")
                         self.PacketsList.append(KeyExchangePacket)
@@ -97,19 +101,23 @@ class PLSClient(StackingProtocol):
                 if isinstance(pkt, PlsKeyExchange):
                     print("Client: PlskeyExchange receive!")
                     self.PacketsList.append(pkt)
-                    self.ServerPrekey = self.privateKey.decrypt(pkt.PreKey)
+                    self.ServerPrekey = PKCS1OAEP_Cipher(self.privateKey, None, None, None).decrypt(pkt.PreKey)
                     self.validation = b''
                     for packet in self.PacketsList:
                         pktdata = packet.__serialize__()
                         self.validation = self.validation+pktdata
-                    self.hashvalidation = hashlib.sha1(self.validation).hexdigest()
+                    self.hashvalidation = hashlib.sha1(self.validation).digest()
                     HandshakeDonePacket = PlsHandshakeDone()
-                    HandshakeDonePacket.ValidationHash = self.hashvalidation.encode()
+                    HandshakeDonePacket.ValidationHash = self.hashvalidation
                     self.transport.write(HandshakeDonePacket.__serialize__())
                     print("Client: HandshakeDone packet sent!")
                 if isinstance(pkt, PlsHandshakeDone):
                     print("Client: Handshake Done!")
                     self.CalHash()
+                    self.encrt = Counter.new(128, initial_value=int(hexlify(self.IVc),16))
+                    self.aesEncrypter = AES.new(self.EKc, counter=self.encrt, mode=AES.MODE_CTR)
+                    self.decrt = Counter.new(128, initial_value=int(hexlify(self.IVs),16))
+                    self.aesDecrypter = AES.new(self.EKs, counter=self.decrt, mode=AES.MODE_CTR)
                     self.higherProtocol().connection_made(self.higherTransport)
                     self.status =1
                     
@@ -163,32 +171,30 @@ class PLSClient(StackingProtocol):
         return hm.digest()
                 
     def encryptEngine(self, plaintext):
-        crt = Counter.new(128, initial_value=int(codecs.encode(self.IVc, 'hex_codec'),16))
-        aesEncrypter = AES.new(self.EKc, counter=crt, mode=AES.MODE_CTR)
-        ciphertext = aesEncrypter.encrypt(plaintext)
+        ciphertext = self.aesEncrypter.encrypt(plaintext)
         return ciphertext
     
     def decryptEngine(self, ciphertext):
-        crt = Counter.new(128, initial_value=int(codecs.encode(self.IVs, 'hex_codec'),16))
-        aesDecrypter = AES.new(self.EKs, counter=crt, mode=AES.MODE_CTR)
-        plaintext = aesDecrypter.decrypt(ciphertext)
+        plaintext = self.aesDecrypter.decrypt(ciphertext)
         return plaintext
     
     
     def CalHash(self):
-        hashdata = b"PLS1.0" + self.ClientNonce.__str__().encode() + self.ServerNonce.__str__().encode() + self.ClientPrekey + self.ServerPrekey
-        block0 = hashlib.sha1(hashdata).hexdigest()
-        block1 = hashlib.sha1(block0.encode()).hexdigest()
-        block2 = hashlib.sha1(block1.encode()).hexdigest()
-        block3 = hashlib.sha1(block2.encode()).hexdigest()
-        block4 = hashlib.sha1(block3.encode()).hexdigest()
-        keyset = block0.encode() + block1.encode() + block2.encode() + block3.encode() + block4.encode()
-        self.EKc = keyset[0:32]
-        self.EKs = keyset[32:64]
-        self.IVc = keyset[64:96]
-        self.IVs = keyset[96:128]
-        self.MKc = keyset[128:160]
-        self.MKs = keyset[160:192]
+        hashdata = b'PLS1.0' + self.ClientNonce.to_bytes(8,byteorder="big") + self.ServerNonce.to_bytes(8,byteorder="big") + self.ClientPrekey + self.ServerPrekey
+        block0 = hashlib.sha1(hashdata).digest()
+        block1 = hashlib.sha1(block0).digest()
+        block2 = hashlib.sha1(block1).digest()
+        block3 = hashlib.sha1(block2).digest()
+        block4 = hashlib.sha1(block3).digest()
+        keyset = block0 + block1 + block2 + block3 + block4
+        
+        self.EKc = keyset[0:16]
+        self.EKs = keyset[16:32]
+        self.IVc = keyset[32:48]
+        self.IVs = keyset[48:64]
+        self.MKc = keyset[64:80]
+        self.MKs = keyset[80:96]
+       
     
     def connection_lost(self,exc):
         print('Connection stopped because {}'.format(exc))

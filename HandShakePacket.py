@@ -23,12 +23,12 @@ import zlib
 
 
 class PEEPPacket(PacketType):
-    DEFINITION_IDENTIFIER = "PEEP"
+    DEFINITION_IDENTIFIER = "PEEP.Packet"
     DEFINITION_VERSION = "1.0"
     FIELDS = [("Type", UINT8),
               ("SequenceNumber", UINT32({Optional: True})),
-              ("Acknowledgement", UINT32({Optional: True})),
               ("Checksum", UINT16),
+              ("Acknowledgement", UINT32({Optional: True})),
               ("Data", BUFFER({Optional: True}))]
     
     def updateSeqAcknumber(self, seq, ack):

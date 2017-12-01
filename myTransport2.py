@@ -14,9 +14,9 @@ class PlsTransport(StackingTransport):
         
     def write(self, data):   # higher layer protocol will call this function from transmission
         self.data = data
-        
         self.encryptData = self.protocol.encryptEngine(self.data)  # should be modified after encryption
         dataPacket = PlsData()
+        
         dataPacket.Ciphertext = self.encryptData
         dataPacket.Mac = self.protocol.MacEngine(self.encryptData)
         self.lowerTransport().write(dataPacket.__serialize__())
